@@ -12,6 +12,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      ATSD_LOGIN: axibase
+      ATSD_PASSWORD: axibase
 
     steps:
     - uses: axibase/checkout@v2
@@ -26,6 +29,7 @@ jobs:
         docker login -u ${{ secrets.DOCKER_LOGIN }} -p ${{ secrets.DOCKER_TOKEN }}
         docker run -d --name="atsd-api-test" -e axiname="$ATSD_LOGIN" -e axipass="$ATSD_PASSWORD" -e timezone="Asia/Kathmandu" axibase/atsd:api_test
         export ATSD_HOST=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' atsd-api-test)
+        echo "ATSD_HOST=$ATSD_HOST" >> $GITHUB_ENV
         while [[ $(curl --user $ATSD_LOGIN:$ATSD_PASSWORD --write-out %{http_code} --silent --output /dev/null http://$ATSD_HOST:8088/version) != 200 ]]; do  echo "waiting to start $name server ..."; sleep 3; done
     - name: Run tests
       run: |
